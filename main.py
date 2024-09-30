@@ -10,7 +10,9 @@ p[3]=card_sort(p[3])
 fst =linearSearch(p,'03c')
 p1 = fst[0]
 table=['03c']
-i=p1
+i=p1+1
+if i>3:
+    i=0
 p[i] = list(set(p[i])-set(table))
 surender=[]
 tsurender=0
