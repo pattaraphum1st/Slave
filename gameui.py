@@ -194,6 +194,30 @@ class CardGameUI:
                 self.show_podium()
                 return  # End the game
 
+            # If the game is not over, reset for the next round without clearing the table
+            self.round_winner = player_id
+            self.reset_round(clear_table=False)  # Keep the current table
+            return
+
+        # Move to the next player's turn
+        self.next_turn()
+
+        # Update the UI for the next round
+        self.update_ui()
+
+
+        # Check if the player has won the game (finished all cards)
+        if len(self.game.players[player_id].cards) == 0:
+            self.winners.append(player_id)  # Track the player as a game winner
+            messagebox.showinfo("Game Winner", f"Player {self.game.players[player_id].id + 1} has won the game by finishing all cards!")
+
+            # Check if we have 3 winners, which means the game is over for the remaining player
+            if len(self.winners) == 3:
+                remaining_player = self.get_remaining_player()
+                self.winners.append(remaining_player)  # The last player automatically loses
+                self.show_podium()
+                return  # End the game
+
             # If the game is not over, reset for the next round
             self.round_winner = player_id
             self.reset_round()
