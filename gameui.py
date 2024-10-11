@@ -21,7 +21,7 @@ class CardGameUI:
         # Automatically start the game with the first player who has '03c'
         self.first_player = self.game.find_first_player('03c')
         if self.first_player is not None:
-            self.current_turn = self.first_player
+            self.current_turn = (self.first_player+1)%4
             self.game.table = ['03c']
             self.game.players[self.first_player].remove_cards(['03c'])
 
@@ -206,29 +206,6 @@ class CardGameUI:
         self.update_ui()
 
 
-        # Check if the player has won the game (finished all cards)
-        if len(self.game.players[player_id].cards) == 0:
-            self.winners.append(player_id)  # Track the player as a game winner
-            messagebox.showinfo("Game Winner", f"Player {self.game.players[player_id].id + 1} has won the game by finishing all cards!")
-
-            # Check if we have 3 winners, which means the game is over for the remaining player
-            if len(self.winners) == 3:
-                remaining_player = self.get_remaining_player()
-                self.winners.append(remaining_player)  # The last player automatically loses
-                self.show_podium()
-                return  # End the game
-
-            # If the game is not over, reset for the next round
-            self.round_winner = player_id
-            self.reset_round()
-            return
-
-        # Move to the next player's turn
-        self.next_turn()
-
-        # Update the UI for the next round
-        self.update_ui()
-
     def surrender(self, player_id):
         """Process the player's surrender."""
         self.game.surrender[player_id] = 1  # Mark the player as surrendered
@@ -271,7 +248,7 @@ class CardGameUI:
         """Move to the next player's turn."""
         self.current_turn = (self.current_turn + 1) % 4
         # Skip players who have won the game (no cards left) or have already surrendered
-        while self.game.surrender[self.current_turn] == 1 or len(self.game.players[self.current_turn].cards) == 0:
+        while self.game.surrender[self.current_turn] == 1 or len(self.game.players[self.current_turn].cards) == 1:
             self.current_turn = (self.current_turn + 1) % 4
 
     def get_remaining_player(self):
