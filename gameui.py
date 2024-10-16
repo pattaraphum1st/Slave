@@ -21,7 +21,7 @@ class CardGameUI:
         # Automatically start the game with the first player who has '03c'
         self.first_player = self.game.find_first_player('03c')
         if self.first_player is not None:
-            self.current_turn = (self.first_player+1)%4
+            self.current_turn = self.first_player+1
             self.game.table = ['03c']
             self.game.players[self.first_player].remove_cards(['03c'])
 
@@ -194,12 +194,12 @@ class CardGameUI:
                 self.show_podium()
                 return  # End the game
 
-            # If the game is not over, reset for the next round without clearing the table
-            self.round_winner = player_id
-            self.reset_round(clear_table=False)  # Keep the current table
+            # If the game is not over, the player won but the turn moves to the next player
+            self.next_turn()
+            self.update_ui()  # Ensure the UI reflects the next player's turn
             return
 
-        # Move to the next player's turn
+        # Move to the next player's turn if no one has won
         self.next_turn()
 
         # Update the UI for the next round
@@ -229,13 +229,11 @@ class CardGameUI:
 
                 # If 3 players have won, end the game with a podium
                 if len(self.winners) == 3:
-                    remaining_player = self.get_remaining_player()
-                    self.winners.append(remaining_player)
                     self.show_podium()
                     return  # End the game
 
             self.round_winner = remaining_player
-            self.reset_round()
+            self.reset_round(clear_table=False)  # Do not clear the table
         else:
             messagebox.showinfo("Surrender", f"Player {player_id + 1} has surrendered for this round.")
             # Move to the next player's turn
@@ -248,8 +246,9 @@ class CardGameUI:
         """Move to the next player's turn."""
         self.current_turn = (self.current_turn + 1) % 4
         # Skip players who have won the game (no cards left) or have already surrendered
-        while self.game.surrender[self.current_turn] == 1 or len(self.game.players[self.current_turn].cards) == 1:
+        while self.game.surrender[self.current_turn] == 1 or len(self.game.players[self.current_turn].cards) == 0:
             self.current_turn = (self.current_turn + 1) % 4
+
 
     def get_remaining_player(self):
         """Returns the index of the player who has not surrendered in the round."""
@@ -279,13 +278,14 @@ class CardGameUI:
         self.selected_cards = []
         self.update_ui()
 
-
-    def get_next_player_with_cards(self):
-        """Find the next player who still has cards left to play."""
-        for i in range(4):
-            if len(self.game.players[i].cards) > 0 and i not in self.winners:
-                return i
+    def get_next_player_with_cards(self, current_player):
+        """Find the next player who still has cards left to play, starting from the current player."""
+        for i in range(1, 5):  # Check the next 4 players in a circular manner
+            next_player = (current_player + i) % 4  # Use modulo to wrap around the player index
+            if len(self.game.players[next_player].cards) > 0 and next_player not in self.winners:
+                return next_player
         return None  # Fallback case if no players have cards left
+
 
     def show_podium(self):
         """Display the podium with the order of winners."""
